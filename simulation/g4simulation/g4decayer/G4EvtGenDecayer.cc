@@ -63,27 +63,32 @@ G4EvtGenDecayer::G4EvtGenDecayer()
 {
   mEvtGenRandomEngine = new PHEvtGenRandomEngine();
 
-  EvtRandom::setRandomEngine(static_cast<EvtRandomEngine*>(mEvtGenRandomEngine));
+  EvtRandom::setRandomEngine(static_cast<EvtRandomEngine*> (mEvtGenRandomEngine));
 
   radCorrEngine = genList.getPhotosModel();
 
   extraModels = genList.getListOfModels();
 
   // the hardcoded paths are temporary
-  if (getenv("OFFLINE_MAIN") == nullptr) exit(1);
+  const char *offline_main = getenv("OFFLINE_MAIN");
 
-  string decay = string(getenv("OFFLINE_MAIN")) + "/share/EvtGen/DECAY.DEC";  // Using PDG 2019 reference as the input for now
-  string evt = string(getenv("OFFLINE_MAIN")) + "/share/EvtGen/evt.pdl";
+  if (!offline_main)
+  {
+    exit(1);
+  }
 
-  mEvtGen = new EvtGen(decay, evt, static_cast<EvtRandomEngine*>(mEvtGenRandomEngine), radCorrEngine, &extraModels);
+  string decay = string(offline_main) + "/share/EvtGen/DECAY.DEC";  // Using PDG 2019 reference as the input for now
+  string evt = string(offline_main) + "/share/EvtGen/evt.pdl";
+
+  mEvtGen = new EvtGen(decay, evt, static_cast<EvtRandomEngine*> (mEvtGenRandomEngine), radCorrEngine, &extraModels);
   extraModels.clear();
   // delete mEvtGen;	QATree
 
-  //   bool WilluseXml =false;
+   bool WilluseXml =false;
   //  SetDecayTable("EvtGenDecayFiles/Bc.DStar+D0Star.Phi.DEC",WilluseXml);
-  //   SetDecayTable("EvtGenDecayFiles/JPsi.PP.DEC",WilluseXml);
+   SetDecayTable("EvtGenDecayFiles/JpsiRHO.DEC",WilluseXml);
 
-  //   std::cout << "Now use Jpsi -> pp decay ONLY" << std::endl;
+   std::cout << "EvtGen Called Bro" << std::endl;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -142,6 +147,12 @@ G4DecayProducts* G4EvtGenDecayer::ImportDecayProducts(const G4Track& track)
 
   std::stack<HepMC3::GenParticlePtr> stack;
 
+  //Debug//
+  for(auto PartCheck :  evt->particles()){
+//	  std::cout << "EvtGen Level:  PDGID = " << PartCheck->pdg_id() << "    E = " << PartCheck->momentum().e() << std::endl;
+
+  }
+
   auto part = evt->particles()[0];
 
   if (part->pdg_id() != pdgEncoding) std::cout << "Issue Found: The first particle in the decay chain is NOT the incoming particle decayed by EvtGen" << std::endl;
@@ -187,7 +198,7 @@ G4DecayProducts* G4EvtGenDecayer::ImportDecayProducts(const G4Track& track)
 
           //			std::cout << "pdg = " << pdg << "   part->momentum().px() = " << part->momentum().px() << "   part->momentum().py() = " <<  part->momentum().py() << "  part->momentum().pz() = " <<  part->momentum().pz() << std::endl;
           //			std::cout << "pdg: " << pdg << "    Lifetime = " << abs(particle->end_vertex()->position().t() - particle->production_vertex()->position().t() ) << std::endl;
-
+	//	  std::cout << "pdg = " << pdg << " Pushed " << std::endl;	
           decayProducts->PushProducts(dynamicParticle);
         }
         else
